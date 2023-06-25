@@ -8,12 +8,6 @@ Resources:
       Handler: org.example.LambdaMethodHandler::handleRequest
       Runtime: java11
       CodeUri: target/lambda-practice-1.0-SNAPSHOT.jar
-      Events:
-        MyS3Event:
-          Type: S3
-          Properties:
-            Bucket: !Ref test-trigger-lambda-dev-code
-            Events: s3:ObjectCreated:*
       Description: Java function
       MemorySize: 512
       Timeout: 10

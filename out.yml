@@ -5,15 +5,9 @@ Resources:
   function:
     Type: AWS::Serverless::Function
     Properties:
-      Events:
-        MyS3Event:
-          Type: S3
-          Properties:
-            Bucket: test-trigger-lambda-dev-code
-            Events: s3:ObjectCreated:*
-      CodeUri: s3://test-trigger-lambda-dev-code/09dfa179f294cbaafaa18298dff8a26f
       Handler: org.example.LambdaMethodHandler::handleRequest
       Runtime: java11
+      CodeUri: s3://test-bucket-lambda-dev-01/09dfa179f294cbaafaa18298dff8a26f
       Description: Java function
       MemorySize: 512
       Timeout: 10
