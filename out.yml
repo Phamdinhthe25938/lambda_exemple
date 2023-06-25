@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Events:
+        MyS3Event:
+          Type: S3
+          Properties:
+            Bucket: test-trigger-lambda-dev-code
+            Events: s3:ObjectCreated:*
+      CodeUri: s3://test-trigger-lambda-dev-code/09dfa179f294cbaafaa18298dff8a26f
+      Handler: org.example.LambdaMethodHandler::handleRequest
+      Runtime: java11
+      Description: Java function
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AWSLambda_ReadOnlyAccess
+      - AWSXrayWriteOnlyAccess
+      - AWSLambdaVPCAccessExecutionRole
+      Tracing: Active
