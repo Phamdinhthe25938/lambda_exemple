@@ -16,7 +16,7 @@ public class KinesisFirehoseClient {
     public static AmazonKinesisFirehose getFirehoseClient(){
         return AmazonKinesisFirehoseClientBuilder
                 .standard()
-                .withRegion(Regions.EU_WEST_2)
+                .withRegion(Regions.US_WEST_2)
                 .build();
     }
 }

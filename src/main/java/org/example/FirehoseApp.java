@@ -1,62 +1,64 @@
 package org.example;
 
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
+import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchRequest;
 import com.amazonaws.services.kinesisfirehose.model.PutRecordRequest;
 import com.amazonaws.services.kinesisfirehose.model.PutRecordResult;
 import com.amazonaws.services.kinesisfirehose.model.Record;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.StringWriter;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class FirehoseApp {
-    List<String> productList = new ArrayList<>();
+  List<String> productList = new ArrayList<>();
 
-    public static void main(String[] args) throws InterruptedException {
-        FirehoseApp app = new FirehoseApp();
-        app.sendData();
+  public static void main(String[] args) throws InterruptedException {
+    FirehoseApp app = new FirehoseApp();
+    app.sendData();
+  }
+
+
+  public void sendData() throws InterruptedException {
+    //create client
+    AmazonKinesisFirehose firehoseClient = KinesisFirehoseClient.getFirehoseClient();
+    int PARTITION_SIZE = 20;
+    List<Record> recordList = new ArrayList<>();
+    for (long i = 0; i < 100; i++) {
+      Customer customer = new Customer(i, "the " + 1, 20L + i, "nam dinh");
+      customer.setCustomer_id(i);
+      //create put record request
+      recordList.add(new Record().withData(ByteBuffer.wrap(
+          getBytesByObject(customer))));
     }
+    PutRecordRequest batchRequest = new PutRecordRequest();
+    batchRequest.setDeliveryStreamName("load-data-kinesis-test");
 
+    recordList.forEach(e -> {
+      batchRequest.setRecord(e);
+      firehoseClient.putRecord(batchRequest);
+    });
+  }
 
-
-    public void sendData() throws InterruptedException {
-        createCatalog();
-        //create client
-        AmazonKinesisFirehose firehoseClient = KinesisFirehoseClient.getFirehoseClient();
-        for(int i=0; i<100;i++){
-            //create put record request
-            PutRecordRequest putRecordRequest = new PutRecordRequest();
-            putRecordRequest.setDeliveryStreamName("test-kinesis-data");
-            putRecordRequest.setRecord(new Record().withData(ByteBuffer.wrap(orderList().getBytes())));
-            //send data
-            PutRecordResult result = firehoseClient.putRecord(putRecordRequest);
-            System.out.println(result.toString());
-            Thread.sleep(10000);
-        }
-
+  private static byte[] getBytesByObject(Object ob) {
+    ObjectMapper objectMapper = new ObjectMapper();
+    StringWriter sw = new StringWriter();
+    // build data to json
+    try {
+      JsonFactory jsonFactory = new JsonFactory();
+      JsonGenerator generator = jsonFactory.createGenerator(sw);
+      objectMapper.writeValue(generator, ob);
+    } catch (Exception e) {
+      System.out.println("fail");
     }
-
-    private String orderList(){
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder();
-        for(int i=0;i<1000;i++){
-            sb.append(Math.abs(random.nextInt())).append(",")
-                    .append(productList.get(random.nextInt(productList.size()))).append(",")
-                    .append(random.nextInt(100)).append("\n");
-        }
-        return sb.toString().trim();
-    }
-
-
-    private void createCatalog(){
-        productList.add("shirt");
-        productList.add("t-shirt");
-        productList.add("tie");
-        productList.add("shorts");
-        productList.add("jeans");
-        productList.add("flip-flops");
-        productList.add("shoes");
-    }
-
+    return sw.toString().getBytes(StandardCharsets.UTF_8);
+  }
 }
